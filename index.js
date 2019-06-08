@@ -15,7 +15,7 @@ module.exports.notifyToSlack = (event, callback) => {
   if (status.indexOf(build.status) === -1) {
     return callback();
   }
-
+  console.log(build)
   // Send message to Slack.
   const message = createSlackMessage(build);
   webhook.send(message, callback);
@@ -28,18 +28,21 @@ const eventToBuild = (data) => {
 
 // createSlackMessage creates a message from a build object.
 const createSlackMessage = (build) => {
-  let message = {
+  const startTime = new Date(build.startTime);
+  const finishTime = new Date(build.finishTime);
+  const createTime = new Date(build.createTime);
+  const buildTime = finishTime.getTime() - startTime.getTime();
+  const buildMin = Math.floor(buildTime / (60 * 1000));
+  const buildSec = Math.round((buildTime % (1000 * 60)) / 1000)
+
+  return {
     mrkdwn: true,
     attachments: [
       {
-        title: `Google Cloud Build logs (\`${build.id}\`)`,
-        title_link: build.logUrl,
-        fields: [{
-          title: 'Status',
-          value: build.status
-        }]
+        text: `Build ${build.source.repoSource.repoName}/${build.source.repoSource.branchName} (${build.id}) started at ${createTime} finished with ${build.status} in ${buildMin} min ${buildSec} sec.
+${build.logUrl}`,
+        color: '#0040FF',
       }
     ]
   };
-  return message
 }
