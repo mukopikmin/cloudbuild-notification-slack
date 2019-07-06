@@ -15,7 +15,7 @@ module.exports.notifyToSlack = (event, callback) => {
   if (status.indexOf(build.status) === -1) {
     return callback();
   }
-  console.log(build)
+
   // Send message to Slack.
   const message = createSlackMessage(build);
   webhook.send(message, callback);
@@ -34,6 +34,7 @@ const createSlackMessage = (build) => {
   const buildTime = finishTime.getTime() - startTime.getTime();
   const buildMin = Math.floor(buildTime / (60 * 1000));
   const buildSec = Math.round((buildTime % (1000 * 60)) / 1000)
+  const color = build.status === 'SUCCESS' ? '#0040FF' : '#FE2E2E'
 
   return {
     mrkdwn: true,
