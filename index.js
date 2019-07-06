@@ -32,19 +32,22 @@ const eventToBuild = (data) => {
 const createSlackMessage = (build) => {
   const startTime = new Date(build.startTime);
   const finishTime = new Date(build.finishTime);
-  const createTime = moment(build.createTime).format('YYYY/MM/DD HH:mm:ss');
+  const createTime = moment(new Date(build.createTime))
   const buildTime = finishTime.getTime() - startTime.getTime();
   const buildMin = Math.floor(buildTime / (60 * 1000));
   const buildSec = Math.round((buildTime % (1000 * 60)) / 1000)
   const color = build.status === 'SUCCESS' ? '#0040FF' : '#FE2E2E'
 
+  // Set timezone for ja
+  createTime.add('hours', 9)
+
   return {
     mrkdwn: true,
     attachments: [
       {
-        text: `Build ${build.source.repoSource.repoName}/${build.source.repoSource.branchName} started at ${createTime} finished with ${build.status} in ${buildMin} min ${buildSec} sec.
+        text: `Build ${build.source.repoSource.repoName}/${build.source.repoSource.branchName} started at ${createTime.format('YYYY/MM/DD HH:mm:ss')} finished with ${build.status} in ${buildMin} min ${buildSec} sec.
 ${build.logUrl}`,
-        color: '#0040FF',
+        color,
       }
     ]
   };
