@@ -1,7 +1,9 @@
+const moment = require('moment')
 const IncomingWebhook = require('@slack/client').IncomingWebhook;
 const SLACK_WEBHOOK_URL = process.env.INCOMING_WEBHOOK
-
 const webhook = new IncomingWebhook(SLACK_WEBHOOK_URL);
+
+moment.locale('ja')
 
 // subscribe is the main function called by Cloud Functions.
 module.exports.notifyToSlack = (event, callback) => {
@@ -30,7 +32,7 @@ const eventToBuild = (data) => {
 const createSlackMessage = (build) => {
   const startTime = new Date(build.startTime);
   const finishTime = new Date(build.finishTime);
-  const createTime = new Date(build.createTime);
+  const createTime = moment(build.createTime).format('YYYY/MM/DD HH:mm:ss');
   const buildTime = finishTime.getTime() - startTime.getTime();
   const buildMin = Math.floor(buildTime / (60 * 1000));
   const buildSec = Math.round((buildTime % (1000 * 60)) / 1000)
@@ -40,7 +42,7 @@ const createSlackMessage = (build) => {
     mrkdwn: true,
     attachments: [
       {
-        text: `Build ${build.source.repoSource.repoName}/${build.source.repoSource.branchName} (${build.id}) started at ${createTime} finished with ${build.status} in ${buildMin} min ${buildSec} sec.
+        text: `Build ${build.source.repoSource.repoName}/${build.source.repoSource.branchName} started at ${createTime} finished with ${build.status} in ${buildMin} min ${buildSec} sec.
 ${build.logUrl}`,
         color: '#0040FF',
       }
