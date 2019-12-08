@@ -39,16 +39,23 @@ const createSlackMessage = (build) => {
   const color = build.status === 'SUCCESS' ? '#0040FF' : '#FE2E2E'
 
   // Set timezone for ja
-  createTime.add('hours', 9)
+  createTime.add(9, 'hours')
+
+  const formatCreateTime = createTime.format('YYYY/MM/DD HH:mm:ss')
+  const repoName = build.substitutions.REPO_NAME
+  const tagName = build.substitutions.TAG_NAME
+  let text
+
+  if (tagName) {
+    text = `Deploy ${repoName}:${tagName} started at ${formatCreateTime} finished with ${build.status} in ${buildMin} min ${buildSec} sec.
+${build.logUrl}`
+  } else {
+    text = `Build ${repoName} started at ${formatCreateTime} finished with ${build.status} in ${buildMin} min ${buildSec} sec.
+${build.logUrl}`
+  }
 
   return {
     mrkdwn: true,
-    attachments: [
-      {
-        text: `Build ${build.source.repoSource.repoName}/${build.source.repoSource.branchName} started at ${createTime.format('YYYY/MM/DD HH:mm:ss')} finished with ${build.status} in ${buildMin} min ${buildSec} sec.
-${build.logUrl}`,
-        color,
-      }
-    ]
+    attachments: [{ text, color }]
   };
 }

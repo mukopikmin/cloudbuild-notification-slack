@@ -1,7 +1,11 @@
-#! /bin/sh
+#! /bin/bash
 
-INCOMING_WEBHOOK=$1
-source .env
+set -ex
+
+if [ "$INCOMING_WEBHOOK" = "" ] ; then
+  echo "Insuffcient parameters."
+  exit 1
+fi
 
 gcloud functions deploy notifyToSlack \
   --runtime nodejs8 \
