@@ -6,7 +6,7 @@ const webhook = new IncomingWebhook(SLACK_WEBHOOK_URL);
 moment.locale('ja')
 
 // subscribe is the main function called by Cloud Functions.
-module.exports.notifyToSlack = (event, callback) => {
+module.exports.notifyToSlack = (event, context) => {
   const build = eventToBuild(event.data);
 
   // Skip if the current status is not in the status list.
@@ -15,12 +15,12 @@ module.exports.notifyToSlack = (event, callback) => {
   // INTERNAL_ERROR, TIMEOUT, CANCELLED
   const status = ['SUCCESS', 'FAILURE', 'INTERNAL_ERROR', 'TIMEOUT'];
   if (status.indexOf(build.status) === -1) {
-    return callback();
+    return;
   }
 
   // Send message to Slack.
   const message = createSlackMessage(build);
-  webhook.send(message, callback);
+  webhook.send(message);
 };
 
 // eventToBuild transforms pubsub event message to a build object.
@@ -42,17 +42,10 @@ const createSlackMessage = (build) => {
   createTime.add(9, 'hours')
 
   const formatCreateTime = createTime.format('YYYY/MM/DD HH:mm:ss')
-  const repoName = build.substitutions.REPO_NAME
-  const tagName = build.substitutions.TAG_NAME
-  let text
-
-  if (tagName) {
-    text = `Deploy ${repoName}:${tagName} started at ${formatCreateTime} finished with ${build.status} in ${buildMin} min ${buildSec} sec.
+  const repoName = build.source.repoSource.repoName
+  const branchName = build.source.repoSource.branchName
+  const text = `Build ${repoName}/${branchName} started at ${formatCreateTime} finished with ${build.status} in ${buildMin} min ${buildSec} sec.
 ${build.logUrl}`
-  } else {
-    text = `Build ${repoName} started at ${formatCreateTime} finished with ${build.status} in ${buildMin} min ${buildSec} sec.
-${build.logUrl}`
-  }
 
   return {
     mrkdwn: true,
